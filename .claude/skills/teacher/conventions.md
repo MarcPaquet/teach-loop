@@ -116,6 +116,27 @@ Stock Obsidian callout types only, so they render without custom CSS.
 The learner may be reading the note live. Never write an item's answer, its key, or the wrong model it targets into
 the note before the learner has answered.
 
+## Rendering
+
+A note is plain Markdown, and Obsidian displays it with no plugin, theme or CSS added. Write only what a stock vault
+shows correctly.
+
+- **Math.** Formulas, symbols and single variables go in LaTeX: `$...$` inside a sentence, `$$...$$` on separate lines.
+  Do not type a formula as plain text.
+- **Money.** Escape a dollar sign that means currency (`\$40`). Obsidian treats two unescaped `$` on one line as the
+  two ends of a formula.
+- **Code.** A fenced block with the language named on the opening fence, and the version when the behaviour depends on
+  it. Output shown in a note is output the code produced when it was run.
+- **Diagrams.** For boxes and arrows (a flow, a sequence, states, dependencies), a fenced `mermaid` block in the note
+  itself. Keep to the common diagram types, and put a label in double quotes when it contains punctuation.
+- **Pictures and charts.** For an exact layout (memory, a packet, geometry), an SVG. For plotted numbers, an image made
+  by a script. Save it in `attachments/` on a white background so it stays readable in dark mode, open the result and
+  check it, then embed it with `![[file]]`. Charted numbers are real, or labelled as illustrative.
+- **When to draw.** Only when the picture shows structure, order or quantities that the prose does not. One idea per
+  picture. If unsure, leave it out.
+
+Colour comes from the callout types above and from nothing else.
+
 ## Keys
 
 Before posing any item, write its key. Lesson items go to `.keys/lessons/<subject>/<topic>.md`; practice items to

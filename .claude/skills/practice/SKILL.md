@@ -9,7 +9,7 @@ Brings earlier material back in situations unlike the lesson, without naming the
 strengthens; it does not re-teach. Every problem is a graded item, written to a practice note as it happens.
 
 Read first: `conventions.md` in the `teacher` skill folder (`../teacher/conventions.md`). Forms, confidence, help ladder,
-miss types, result line, callouts, keys, levels and queue rules live there and are not repeated here. Also read:
+miss types, result line, callouts, rendering, keys, levels and queue rules live there and are not repeated here. Also read:
 
 - `problems.md`: how to write a cold problem, with examples.
 - `note-template.md`: the practice note.

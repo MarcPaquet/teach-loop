@@ -50,7 +50,7 @@ Later: "continue ..." resumes a lesson, "practice" optionally retests what you c
 | `debrief` skill | `.claude/skills/debrief/` | `SKILL.md`, `metrics.md` | "debrief", or offered at the end of a lesson or practice session |
 | `researcher` agent | `.claude/agents/researcher.md` | one file | called by `teacher` and `practice`, never by the learner |
 
-`teacher/conventions.md` holds the formats the skills share; the friction-log line format lives in `friction-log.md`.
+`teacher/conventions.md` holds the formats the skills share, including how math, code and diagrams are written so that a stock Obsidian vault renders them; the friction-log line format lives in `friction-log.md`.
 
 ## What's in the vault
 

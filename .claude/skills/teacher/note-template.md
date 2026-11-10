@@ -114,4 +114,5 @@ Claims checked by `researcher` before they were taught.
   through with `~~...~~` and the new line added below them.
 - A `[!bug] Correction <YYYY-MM-DD>` callout goes at the place the wrong statement was made; the wrong statement is
   struck through, not deleted.
-- Attachments (diagrams, charts) go in `attachments/` and are embedded with `![[file.png]]`.
+- Attachments (pictures, charts) go in `attachments/` and are embedded with `![[file.png]]`. Rules for math, code,
+  diagrams and pictures are in `conventions.md`, Rendering.

@@ -11,7 +11,8 @@ lesson, it can break a goal, a track or a topic into strands (*Start*, below).
 
 Supporting files, read at Orient:
 
-- `conventions.md`: item forms, confidence, help ladder, miss types, result line, callouts, keys, levels, queue.
+- `conventions.md`: item forms, confidence, help ladder, miss types, result line, callouts, rendering (math, code,
+  diagrams), keys, levels, queue.
 - `questions.md`: how to write items that are equipped and discriminating, with examples.
 - `note-template.md`: the lesson note.
 

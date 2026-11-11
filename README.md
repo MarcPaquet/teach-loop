@@ -69,9 +69,8 @@ Later: "continue ..." resumes a lesson, "practice" optionally retests what you c
 
 `.keys/` is a dot-folder, which Obsidian hides from the file pane, so neither the answers nor the queue (which names each idea) show before practice.
 
-## Honest limits
+## Limits
 
-- Written in 2026-11 from a method one learner has used since 2026-08.
 - Claude Code and Obsidian only.
 - Fact-checking can still miss: `researcher` reports `unverified` when it cannot open a source, and a source can be wrong.
 - The measures come from a few items per session. One session is a sample, not a trend.

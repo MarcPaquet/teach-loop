@@ -69,9 +69,26 @@ Later: "continue ..." resumes a lesson, "practice" optionally retests what you c
 
 `.keys/` is a dot-folder, which Obsidian hides from the file pane, so neither the answers nor the queue (which names each idea) show before practice.
 
+## Other agent tools
+
+The three skills use the shared `SKILL.md` format (one folder per skill, `name` and `description` in the frontmatter), so their files move unchanged. What changes is the folder they live in and the `researcher` agent, whose format differs per tool. The table follows each tool's documentation as of 2026-11.
+
+| | Claude Code | Codex CLI | Gemini CLI |
+|---|---|---|---|
+| Skills folder | `.claude/skills/` | `.agents/skills/` | `.gemini/skills/` or `.agents/skills/` |
+| `researcher` file | `.claude/agents/researcher.md` | `.codex/agents/researcher.toml` | `.gemini/agents/researcher.md` |
+| `researcher` format | Markdown; frontmatter `name`, `description`, `tools`, `model` | TOML; `name`, `description`, and `developer_instructions` holding the Markdown body; `model` optional | Markdown; frontmatter `name`, `description`; `tools` as a YAML list of Gemini tool names; `model` a Gemini model ID, or left out to use the session's |
+| Web tools for `researcher` | `WebSearch`, `WebFetch` | Web search on by default from a cached index; `web_search = "live"` in `config.toml` for live results | `google_web_search`, `web_fetch` |
+| Start command | `claude` | `codex` | `gemini` |
+
+- Moving `.claude/skills/` to `.agents/skills/` serves Codex CLI and Gemini CLI at once.
+- The skills ask for `researcher` by name. Codex CLI spawns a subagent when a skill's instructions ask for one; Gemini CLI exposes each subagent to the main agent as a tool of the same name.
+- Codex CLI documents web search but no page-fetch tool. `researcher` must open every source it cites, so on Codex it needs a page-reading tool added, for example an MCP server that fetches pages, declared in `config.toml`.
+- Any other tool needs the same three things: a skills folder it reads, a subagent with web search and page fetch, and the files at the paths it expects.
+
 ## Limits
 
-- Claude Code and Obsidian only.
+- Written for Claude Code and Obsidian. Another agent tool needs the changes under [Other agent tools](#other-agent-tools).
 - Fact-checking can still miss: `researcher` reports `unverified` when it cannot open a source, and a source can be wrong.
 - The measures come from a few items per session. One session is a sample, not a trend.
 - No course content ships; the vault starts empty.

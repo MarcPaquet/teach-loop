@@ -1,31 +1,70 @@
-# Example track: replace this page
+---
+type: track
+level: target
+---
 
-> [!warning] This is a placeholder
-> It shows the shape of a track page. `teacher` creates real ones when you start with a goal, track or topic ("my goal is ...", "I want to learn ..."). Replace this content with your own track, or delete the file. The format is defined in `.claude/skills/teacher/conventions.md`.
+# Example track
 
-## Scope
+*A placeholder goal track: what you are aiming for and why. Copy this page for a real goal and delete this one.
+Mapping a target (see the teacher's `mapping-a-target.md`) writes its plan here.*
 
-*One sentence on what the track covers.*
+## Dated tracks
 
-Example: what happens, step by step, between typing a URL and seeing a page.
+A track with a deadline (an exam, an interview) adds two things. Its frontmatter gets `ready_by`, a date or `TBD`
+while the date is unknown, and the page gets a `## Queue` section. Both are needed; `ready_by` alone does not make a
+dated track. While it is active, "continue <track>" means the first unchecked item of its Queue.
 
-Goal (optional, only if you have one): explain that sequence to someone else.
+```yaml
+ready_by: <YYYY-MM-DD>
+```
 
-## Strands
+```markdown
+## Queue
 
-*Each strand has a row in [[levels]]. Order: each depends only on earlier ones. Ticked at Seal of its lesson, with the lesson linked and the current level shown.*
+- [ ] 1. <lesson or review> → [[lesson-name]]
+- [ ] 2. <lesson or review>
+```
 
-- [ ] DNS lookup · L0
-- [ ] TCP connection · L0
-- [ ] TLS handshake · L0
-- [ ] HTTP request and response · L0
+This example track has no date, so it has no Queue.
+
+## Skills
+
+Every skill this track needs, grouped by level. Set by the `tracks` property on each skill.
+
+```base
+filters:
+  and:
+    - file.inFolder("skills")
+    - 'tracks.contains("example-track")'
+views:
+  - type: table
+    name: Skills
+    groupBy:
+      property: note.level
+      direction: ASC
+    order:
+      - file.name
+      - domain
+      - needs
+```
 
 ## Lessons
 
-*Links to lesson notes under `subjects/`, in the order taken.*
-
-- None yet.
-
-## Notes
-
-*Constraints, a deadline, or anything the teacher should weigh when planning.*
+```base
+filters:
+  and:
+    - file.inFolder("subjects")
+    - 'tracks.contains("example-track")'
+views:
+  - type: table
+    name: Lessons
+    groupBy:
+      property: note.status
+      direction: ASC
+    order:
+      - file.name
+      - subject
+      - status
+      - updated
+      - next
+```

@@ -1,0 +1,12 @@
+filters:
+  and:
+    - file.inFolder("subjects")
+    - this.file.hasLink(file)
+views:
+  - type: table
+    name: Lessons
+    order:
+      - file.name
+      - type
+      - status
+      - updated

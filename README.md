@@ -1,102 +1,82 @@
 # teach-loop
 
-Three Claude Code skills and one agent that teach, retest and review a learner's sessions in an Obsidian vault. Each lesson and each set of practice problems is a Markdown note in the vault, and `debrief` adds a line to `friction-log.md` (no note), so the learner's progress lives in files they own.
+Four Claude Code skills (`teacher`, `practice`, `explore`, `debrief`) and one subagent (`researcher`) that teach, retest and track a learner inside an Obsidian vault. Every lesson, practice problem and exploration unit is written live into a Markdown note, and levels with their dated evidence live in `baseline.md` and a graph of skill nodes, so the learner's record is a folder of plain files under git. It fits one learner per clone, who fills in `LEARNER.md` and runs Claude Code from the vault folder.
 
-## The loop
+Two meanings of "skill" appear below: the Claude Code skills in `.claude/skills/`, and the skill nodes in `skills/`, the pieces of knowledge a level is tracked on.
+
+## How a session runs
 
 ```mermaid
 flowchart TD
-    G["A goal, a track, or a topic"] --> B["Break it into skills"]
-    B -- "pick a skill" --> E
-    subgraph lesson["One lesson per skill (teacher)"]
-        E["Evaluate the skill"] --> P["Plan"] --> X["Execute the plan"] --> L["Set the skill's level"]
+    subgraph teacher["teacher: one lesson"]
+        P["Probe"] --> PL["Plan, approved by the learner"]
+        PL --> A["Attempt"]
+        A --> E["Explain"] --> C["Check"]
+        C -- "missed: repair, check a new case" --> C
+        C -- "passed: next step" --> A
+        C -- "last step passed" --> R["Recap"]
     end
-    L -. "optional, later" .-> R["practice: retest it cold"]
-    R -. "updates the level" .-> L
+    R --> B[("baseline.md: levels and History")]
+    R -. "lesson notes are its material" .-> PR["practice: cold problems"]
+    PR --> B
+    X["explore: one unit, then a jump"] --> B
 ```
 
-A goal, a track or a topic is broken into skills (called strands in `levels.md`, to keep them apart from Claude Code skills). There is one lesson per skill (one strand in the files). The learner picks which skill to learn next ("teach me <skill>"). A single skill can also be taught directly, with no track around it. A lesson runs Orient, Probe (evaluate), Agree (plan), Build (execute) and Seal (set the level; the completed units are recorded in the queue as suggested retests). `practice` and `debrief` are optional and run when the learner asks: `practice` retests what the learner chooses, or what the queue suggests; `debrief` is offered at the end of a session, logs it, and may propose one change to a skill, applied only with the learner's agreement. `researcher` checks claims.
+A lesson runs Probe, Plan, Teach and Recap. Each plan step is an Attempt (the learner works on the problem before it is taught), an Explain that starts from that attempt, and a Check. `practice` and `explore` run on their own request and file their evidence in the same places.
 
 ## What each piece does
 
-**teacher** runs on an explicit request ("teach me X", "continue X", or a start such as "my goal is ..." or "I want to learn ..."). Given a goal, track or topic, it breaks it into strands, adds them to `levels.md` and writes a track page in `tracks/`; it does not probe at that point. Given a strand, it reads `LEARNER.md` and the vault, then probes that one strand with explain and predict questions, stopping at the first miss; a lesson covers exactly one strand, and a standalone "teach me X" that needs several is first offered a break into strands; the result is the learner's *edge*. It drafts a plan of units, each framed as a why-question, has the claims checked by `researcher`, and teaches nothing until the learner says yes. Each unit is an Attempt (the learner tries first), an Explain, and a Check whose answer, reasoning and confidence are heard before the verdict. When the evidence contradicts the plan, the plan is edited in a dated callout. At Seal the learner writes their own summary, the strand's level in `levels.md` is updated and the queue gains one row per unit as a suggested retest.
+**teacher** runs on "teach me X", "continue X" or "what should I learn next?". A target (a job offer, a certification, or a broad goal spanning several skills) is first mapped to skill nodes and given a track page; a single topic starts at Probe. Probe creates the lesson note and asks a ladder of 2 to 4 questions per prerequisite strand and stops at the first miss or "I don't know": that rung is the learner's edge. Plan sends the lesson's claims to `researcher`, adds a dependency map (at most 8 nodes) and a step checklist, and teaches nothing until the learner approves. The explanation descends a why-chain (what it is, which problem it removes, why that is a problem, what happens mechanically) until it reaches a statement `researcher` would mark ✅ with no condition, then climbs back one motivated move at a time. Graded questions are quizzes of 3 options plus "4. I don't know", written into the note before they are asked in chat; each wrong option is the pick of one named wrong model, and the options are kept within about 20% of each other's length. The learner adds a confidence word (guess, unsure or sure), and the verdict and confidence together pick the next move: a right guess gets another check of a different kind, a sure miss gets the wrong model named and a counter-case. There is no follow-up "why" question after an answer. When answers contradict the plan, the note gets a dated plan-change callout and existing step numbers never change (an inserted step is `2a`). Recap moves a strand's level in `baseline.md` only when the lesson's checks showed it.
 
-**practice** is optional and runs only on request. It retests old material without a lesson around it. It takes the topic or strand the learner names, or else the rows of `.keys/queue.md` whose suggested date has passed (the oldest rows if none have), mixes strands, and writes each problem in a new setting that does not name the idea it needs. The key is written and verified before the problem is posed. Help comes one rung at a time, starting at the least. A miss gets a short correction, an agreed miss type and a retest in a new form. `practice` moves a level only on evidence from a cold item.
+**practice** runs on "practice X" or "what should I practice?" and works only from material the vault already teaches. Each problem is cold: a new setting whose wording never names the idea it needs, in one of seven forms (`predict`, `explain`, `contrast`, `flaw`, `transfer`, `limits`, `choice`), picked from the target's record. Before a problem is posed, its key is written to `.drills/` and verified by running code, a step-by-step derivation or `researcher`; a key that cannot be verified means the problem is discarded. Help comes one rung at a time on the H0 to H4 ladder (none, refocus, narrow, name, show), and a solve after H3 counts as a miss. Each miss gets a type (`gap`, `model`, `cue`, `slip`, `scope`) read from the learner's reasoning and from what the hints changed, never by asking. Misses are retested at least two problems later in a new form and setting, or listed as Retests owed. A level moves to working on a solve at H0 to H1 on a new case, and to solid on a `limits` problem solved at H0 to H1; a `slip` never moves one.
 
-**debrief** ends a session. It checks that the vault can be resumed, counts the session's result lines, asks the learner two fixed questions (pace, and the least clear point), and appends one line to `friction-log.md`. It repairs the vault's resume fields itself, and proposes at most one edit to one skill file, only when the log shows a pattern and only with the learner's agreement. A change on trial is judged after three sessions against the three before.
+**explore** runs on "explore X" or "jump to Y". It searches the vault first and says whether the subject is covered, partly covered or new, and researches only when the vault is thin (inline for a narrow subject, `researcher` in scope mode for a broad one). A unit is one prediction, one idea taken down to one caveat-free truth, and one check. It ends with two or three jumps: deeper, sideways, or back to where the trail came from. Each session keeps a trail in `explore/`, one line per unit with its check outcome. A unit that touches a strand adds a dated History line to `baseline.md`, and moves a level only on a passed check plus an explanation in the learner's own words. "Make this a lesson" hands the note to `teacher`, which works in the same file.
 
-**researcher** is an agent that checks numbered claims against standards, versioned official docs, primary papers and maintainer writing. For each claim it returns `holds`, `holds-if`, `wrong` or `unverified`, the conditions under which it fails, corrected wording, and sources it opened in that run, each with a quoted sentence.
+**debrief** closes a session. It repairs missing resume fields (`status`, `updated`, `next`), asks the learner first, in one question, about the pace and what unlocked a miss, and has a subagent on a smaller model count loops (one more explanation after a miss on the same idea) from the day's note sections only, not from the transcript. It writes one line to `friction-log.md` and proposes at most one change, only when the log shows a repeated pattern, with one trial running at a time. It never commits on its own.
 
-## Levels
+**researcher** is a subagent that checks a list of claims, or scopes a topic by writing the 5 to 10 claims a first lesson would make and marking the roots. It checks vendor documentation first, then specs, RFCs and textbooks, with blogs only as corroboration, and cites only pages it opened. Each claim gets ✅ true, ⚠️ true with caveats, ❌ false or ❔ unverified, with the condition or correction and its source, and the report ends with a count line.
 
-Five levels, `L0` unseen to `L4` knows limits, defined in `levels.md`. A level moves only on evidence, never on self-report.
+**The structure hook** (`.githooks/commit-msg`, `check_structure.py`) checks staged files on every commit. It blocks a change to a Claude Code skill or agent, the hooks, `CLAUDE.md`, `LEARNER.md`, `addons/`, `skill-graph.md` or `skill-lessons.base`, a skill node added, removed or moved, or a change to `needs`, unless the message starts with `Structure:`. It also checks every skill node's frontmatter (fixed keys, a known level, at most 3 `needs`, at least one track, known needs, lessons and tracks, no cycles) and that note filenames are unique, refuses a level change without `baseline.md` in the same commit, and keeps process changes out of commits that touch lesson, practice or explore notes.
 
-## Setup
-
-1. Clone this repository.
-2. Fill in `LEARNER.md`. `teacher` and `practice` read it at the start of every session.
-3. Open the folder as a vault in Obsidian.
-4. Run `claude` inside the folder.
-5. Say "my goal is ..." or "I want to learn ..." to break it into strands, or "teach me ..." followed by one thing to learn.
-
-Later: "continue ..." resumes a lesson, "practice" optionally retests what you choose, "debrief" ends either.
-
-## What's in the repo
-
-| Piece | Path | Files | Runs when |
-|---|---|---|---|
-| `teacher` skill | `.claude/skills/teacher/` | `SKILL.md`, `conventions.md`, `questions.md`, `note-template.md` | "my goal is ...", "I want to learn ...", "teach me X", "lesson on X", "continue X" |
-| `practice` skill | `.claude/skills/practice/` | `SKILL.md`, `problems.md`, `note-template.md` | "practice", "recall", "test me cold" (optional, on request) |
-| `debrief` skill | `.claude/skills/debrief/` | `SKILL.md`, `metrics.md` | "debrief", or offered at the end of a lesson or practice session |
-| `researcher` agent | `.claude/agents/researcher.md` | one file | called by `teacher` and `practice`, never by the learner |
-
-`teacher/conventions.md` holds the formats the skills share, including how math, code and diagrams are written so that a stock Obsidian vault renders them; the friction-log line format lives in `friction-log.md`.
-
-## What's in the vault
+## The vault
 
 | Path | Purpose |
 |---|---|
-| `LEARNER.md` | Who the learner is and how they learn; read by `teacher` and `practice` at the start of each session |
-| `index.md` | Entry point and the phrases that start each skill |
-| `levels.md` | Level definitions, one row per strand with its edge, dated history |
-| `friction-log.md` | One line per session, the change currently on trial, trial history |
-| `tracks/` | Track pages: a goal, track or topic broken into strands, with links to its lessons |
-| `subjects/` | Lesson notes, `subjects/<subject>/<topic>.md` |
-| `practice/` | Practice notes, `practice/<YYYY-MM-DD>-<slug>.md` |
-| `.keys/` | Answer keys written before each item is posed (`lessons/`, `practice/`), and `queue.md`, the record of retests with a suggested date |
-| `attachments/` | Diagrams and charts embedded in notes |
-| `.claude/` | The three skills (`teacher`, `practice`, `debrief`) and the `researcher` agent |
+| `LEARNER.md` | Filled in by the learner: who they are, aims, track order, how they learn and answer, session length, languages, projects the teacher may read, things to avoid, add-ons |
+| `addons/` | Optional files defining extra session types, each listed in `LEARNER.md` with the phrases that start it |
+| `index.md` | Entry point: lessons in progress, tracks in their default order, subjects |
+| `baseline.md` | One row per strand with its level (none, surface, working, solid) and current edge, plus dated History |
+| `skill-graph.md`, `skills/` | Skill nodes, one note each, with `level`, up to three `needs`, `tracks` and `lessons` |
+| `skill-lessons.base` | Obsidian Bases table embedded in each skill node, listing the notes in `subjects/` it links to |
+| `tracks/` | Goal pages, `foundations.md` and `example-track.md`; a dated track has `ready_by` and a `## Queue` |
+| `subjects/` | Lesson and explore notes, `subjects/<subject>/<topic>.md` |
+| `practice/` | One note per practice session |
+| `explore/` | One trail per explore session |
+| `.drills/` | Hidden answer keys; Obsidian does not show dot-folders |
+| `friction-log.md` | One line per session, and the change on trial |
+| `CLAUDE.md` | Vault rules Claude Code loads in every session |
+| `.githooks/` | The structure hook |
 
-`.keys/` is a dot-folder, which Obsidian hides from the file pane, so neither the answers nor the queue (which names each idea) show before practice.
+## Setup
 
-## Other agent tools
+1. Clone the repository.
+2. Fill in `LEARNER.md`. Empty fields fall back to the defaults listed in `teacher`.
+3. Enable the hook: `git config core.hooksPath .githooks` (it needs `python3`).
+4. Open the folder as an Obsidian vault, with the Bases core plugin enabled.
+5. Run `claude` from the folder, so the project skills load.
+6. Say "teach me <topic>". Later: "continue <topic>", "explore <subject>", "practice <topic>", "debrief".
 
-The three skills use the shared `SKILL.md` format (one folder per skill, `name` and `description` in the frontmatter), so their files move unchanged. What changes is the folder they live in and the `researcher` agent, whose format differs per tool. The table follows each tool's documentation as of 2026-11.
-
-| | Claude Code | Codex CLI | Gemini CLI |
-|---|---|---|---|
-| Skills folder | `.claude/skills/` | `.agents/skills/` | `.gemini/skills/` or `.agents/skills/` |
-| `researcher` file | `.claude/agents/researcher.md` | `.codex/agents/researcher.toml` | `.gemini/agents/researcher.md` |
-| `researcher` format | Markdown; frontmatter `name`, `description`, `tools`, `model` | TOML; `name`, `description`, and `developer_instructions` holding the Markdown body; `model` optional | Markdown; frontmatter `name`, `description`; `tools` as a YAML list of Gemini tool names; `model` a Gemini model ID, or left out to use the session's |
-| Web tools for `researcher` | `WebSearch`, `WebFetch` | Web search on by default from a cached index; `web_search = "live"` in `config.toml` for live results | `google_web_search`, `web_fetch` |
-| Start command | `claude` | `codex` | `gemini` |
-
-- Moving `.claude/skills/` to `.agents/skills/` serves Codex CLI and Gemini CLI at once.
-- The skills ask for `researcher` by name. Codex CLI spawns a subagent when a skill's instructions ask for one; Gemini CLI exposes each subagent to the main agent as a tool of the same name.
-- Codex CLI documents web search but no page-fetch tool. `researcher` must open every source it cites, so on Codex it needs a page-reading tool added, for example an MCP server that fetches pages, declared in `config.toml`.
-- Any other tool needs the same three things: a skills folder it reads, a subagent with web search and page fetch, and the files at the paths it expects.
+`researcher` looks up library documentation through the context7 MCP server first, then the vendor's site.
 
 ## Limits
 
-- Written for Claude Code and Obsidian. Another agent tool needs the changes under [Other agent tools](#other-agent-tools).
-- Fact-checking can still miss: `researcher` reports `unverified` when it cannot open a source, and a source can be wrong.
-- The measures come from a few items per session. One session is a sample, not a trend.
-- No course content ships; the vault starts empty.
+- Written for Claude Code and Obsidian only.
+- Quality depends on the model and on fact-checking that can still miss: `researcher` returns ❔ when it cannot confirm a claim, and a source it opened can be wrong.
+- Levels move on the model's reading of the evidence. The hook checks that a skill node's level and `baseline.md` change together, not that the evidence exists.
+- The hook runs only where `core.hooksPath` is set, and only on commits.
+- `.drills/` is hidden from Obsidian's file pane, not from the learner: the keys are plain files in the repository.
+- It is not a course and ships no content; the vault starts empty.
 
-## Credit
-
-*Ideas drawn from amosblomqvist's [learn](https://github.com/amosblomqvist/learn) and [LearnHarness](https://github.com/amosblomqvist/learnharness); no text from either is included.*
-
-## Licence
+## License
 
 MIT. See `LICENSE`.

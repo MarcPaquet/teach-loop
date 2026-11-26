@@ -7,22 +7,20 @@ Two meanings of "skill" appear below: the Claude Code skills in `.claude/skills/
 ## How a session runs
 
 ```mermaid
-flowchart TD
-    subgraph teacher["teacher: one lesson"]
-        P["Probe"] --> PL["Plan, approved by the learner"]
-        PL --> A["Attempt"]
-        A --> E["Explain"] --> C["Check"]
-        C -- "missed: repair, check a new case" --> C
-        C -- "passed: next step" --> A
-        C -- "last step passed" --> R["Recap"]
+flowchart LR
+    subgraph teacher["teacher: a planned lesson"]
+        direction LR
+        T1["Probe"] --> T2["Plan"] --> T3["Teach"] --> T4["Recap"]
     end
-    R --> B[("baseline.md: levels and History")]
-    R -. "lesson notes are its material" .-> PR["practice: cold problems"]
-    PR --> B
-    X["explore: one unit, then a jump"] --> B
+    subgraph explore["explore: one idea, then a jump"]
+        direction LR
+        E1["Vault"] --> E2["Research"] --> E3["Unit"] --> E4["Jump"]
+    end
+    teacher --> R[("Same notes and levels")]
+    explore --> R
 ```
 
-A lesson runs Probe, Plan, Teach and Recap. Each plan step is an Attempt (the learner works on the problem before it is taught), an Explain that starts from that attempt, and a Check. `practice` and `explore` run on their own request and file their evidence in the same places.
+`teacher` runs a lesson from a plan the learner approved: Probe, Plan, Teach and Recap. Each plan step is an Attempt (the learner works on the problem before it is taught), an Explain that starts from that attempt, and a Check. `explore` has no plan: it looks in the vault, researches only if needed, teaches one unit and offers jumps. Both file their evidence in the same notes and levels. `practice` runs on its own request and retests what either one taught.
 
 ## What each piece does
 
@@ -64,7 +62,9 @@ A lesson runs Probe, Plan, Teach and Recap. Each plan step is an Attempt (the le
 3. Enable the hook: `git config core.hooksPath .githooks` (it needs `python3`).
 4. Open the folder as an Obsidian vault, with the Bases core plugin enabled.
 5. Run `claude` from the folder, so the project skills load.
-6. Say "teach me <topic>". Later: "continue <topic>", "explore <subject>", "practice <topic>", "debrief".
+6. Say `teach me <topic>`. Later: `continue <topic>`, `explore <subject>`, `practice <topic>`, `debrief`.
+
+`tracks/example-track.md` and `skills/example-domain/example-skill.md` are placeholders. Remove them together, in one commit whose message starts with `Structure:`; the hook blocks removing the track alone, because the skill node still lists it.
 
 `researcher` looks up library documentation through the context7 MCP server first, then the vendor's site.
 

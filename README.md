@@ -7,22 +7,42 @@ Two meanings of "skill" appear below: the Claude Code skills in `.claude/skills/
 ## How a session runs
 
 ```mermaid
-flowchart TD
-    subgraph teacher["teacher: one lesson"]
-        P["Probe"] --> PL["Plan, approved by the learner"]
-        PL --> A["Attempt"]
-        A --> E["Explain"] --> C["Check"]
-        C -- "missed: repair, check a new case" --> C
-        C -- "passed: next step" --> A
-        C -- "last step passed" --> R["Recap"]
-    end
-    R --> B[("baseline.md: levels and History")]
-    R -. "lesson notes are its material" .-> PR["practice: cold problems"]
-    PR --> B
-    X["explore: one unit, then a jump"] --> B
+flowchart LR
+    S(("You say")) --> G(["a goal"])
+    S --> N(["what should I learn next?"])
+    S --> T(["teach me X"])
+    S --> C(["continue X"])
+    S --> X(["explore X"])
+    S --> P(["practice X"])
+    S --> D(["debrief"])
+
+    G -- teacher --> G1("Map the goal to skills") --> G2("Track of ordered lessons") -- "each lesson" --> G3(["teach me X"])
+    N -- teacher --> N1("Lesson suggested from your tracks") --> N2(["teach me X or continue X"])
+    T -- teacher --> T1("Probe") --> T2("Plan") --> T3("Teach") --> T4("Recap") --> R1[("Evidence filed")]
+    C -- teacher --> C1("Next unchecked step") --> C2("Teach") --> C3("Recap") --> R2[("Evidence filed")]
+    X -- explore --> X1("Vault check") --> X2("One unit") --> R3[("Evidence filed")] --> J{"Jump"}
+    J -- "deeper, sideways, back" --> J1(["explore X"])
+    J -- "make this a lesson" --> J2(["teach me X"])
+    P -- practice --> P1("Cold problems on what was taught") --> R4[("Evidence filed")]
+    R4 -- "miss: retest owed" --> P2(["practice X"])
+    R4 -- "gap too big" --> P3(["continue X"])
+    D -- debrief --> D1("One line in the friction log") -- "repeated friction" --> D2("One change proposed")
+
+    classDef say fill:#f6f8fa,stroke:#8c959f,color:#1f2328,stroke-width:1px
+    classDef teacher fill:#ddf4ff,stroke:#54aeff,color:#0a3069,stroke-width:1px
+    classDef explore fill:#dafbe1,stroke:#4ac26b,color:#0f5323,stroke-width:1px
+    classDef practice fill:#fff8c5,stroke:#d4a72c,color:#5c3d00,stroke-width:1px
+    classDef debrief fill:#fbefff,stroke:#c297ff,color:#512a97,stroke-width:1px
+    classDef record fill:#ffffff,stroke:#57606a,color:#1f2328,stroke-width:1px
+    class S,G,N,T,C,X,P,D,G3,N2,J1,J2,P2,P3 say
+    class G1,G2,N1,T1,T2,T3,T4,C1,C2,C3 teacher
+    class X1,X2,J explore
+    class P1 practice
+    class D1,D2 debrief
+    class R1,R2,R3,R4 record
 ```
 
-A lesson runs Probe, Plan, Teach and Recap. Each plan step is an Attempt (the learner works on the problem before it is taught), an Explain that starts from that attempt, and a Check. `practice` and `explore` run on their own request and file their evidence in the same places.
+Each branch starts from what the learner says and is labelled and coloured by the skill that takes it. A learning branch ends in evidence filed in `baseline.md` (a dated History line, and a level change when a check showed it), and a grey phrase at the end of a branch is the branch the session continues on. A goal (a job offer, a certification, or a broad goal spanning several skills) is mapped to skill nodes and a track of ordered lessons, and each of those lessons runs as `teach me X`: Probe, Plan, Teach and Recap. In Teach, each plan step is an Attempt (the learner works on the problem before it is taught), an Explain that starts from that attempt, and a Check. `explore` has no plan: it looks in the vault, researches only if needed, teaches one unit, files what the unit showed and offers jumps. `practice` retests a miss in a later problem or session, and sends a gap too big for it to the lesson's open questions, where `continue X` picks it up.
 
 ## What each piece does
 
@@ -64,7 +84,9 @@ A lesson runs Probe, Plan, Teach and Recap. Each plan step is an Attempt (the le
 3. Enable the hook: `git config core.hooksPath .githooks` (it needs `python3`).
 4. Open the folder as an Obsidian vault, with the Bases core plugin enabled.
 5. Run `claude` from the folder, so the project skills load.
-6. Say "teach me <topic>". Later: "continue <topic>", "explore <subject>", "practice <topic>", "debrief".
+6. Say `teach me <topic>`. Later: `continue <topic>`, `explore <subject>`, `practice <topic>`, `debrief`.
+
+`tracks/example-track.md` and `skills/example-domain/example-skill.md` are placeholders. Remove them together, in one commit whose message starts with `Structure:`; the hook blocks removing the track alone, because the skill node still lists it.
 
 `researcher` looks up library documentation through the context7 MCP server first, then the vendor's site.
 

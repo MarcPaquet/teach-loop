@@ -8,19 +8,39 @@ Two meanings of "skill" appear below: the Claude Code skills in `.claude/skills/
 
 ```mermaid
 flowchart LR
-    subgraph teacher["teacher: a planned lesson"]
-        direction LR
-        T1["Probe"] --> T2["Plan"] --> T3["Teach"] --> T4["Recap"]
-    end
-    subgraph explore["explore: one idea, then a jump"]
-        direction LR
-        E1["Vault"] --> E2["Research"] --> E3["Unit"] --> E4["Jump"]
-    end
-    teacher --> R[("Same notes and levels")]
-    explore --> R
+    S(("You say")) --> G(["a goal"])
+    S --> T(["teach me X"])
+    S --> C(["continue X"])
+    S --> N(["what should I learn next?"])
+    S --> X(["explore X"])
+    S --> P(["practice X"])
+    S --> D(["debrief"])
+
+    G -- teacher --> G1("Map the goal to skills") --> G2("Track of ordered lessons") --> G3("Each lesson: as teach me X")
+    T -- teacher --> T1("Probe") --> T2("Plan") --> T3("Teach") --> T4("Recap")
+    C -- teacher --> C1("Resume at the next unchecked step")
+    N -- teacher --> N1("A lesson suggested from your tracks")
+    X -- explore --> X1("Vault check") --> X2("One unit") --> J{"Jump"}
+    J --> J1("Deeper")
+    J --> J2("Sideways")
+    J --> J3("Back")
+    J --> J4("Make this a lesson: teacher takes over")
+    P -- practice --> P1("Cold problems on what was taught")
+    D -- debrief --> D1("One line in the friction log")
+
+    classDef say fill:#f6f8fa,stroke:#8c959f,color:#1f2328,stroke-width:1px
+    classDef teacher fill:#ddf4ff,stroke:#54aeff,color:#0a3069,stroke-width:1px
+    classDef explore fill:#dafbe1,stroke:#4ac26b,color:#0f5323,stroke-width:1px
+    classDef practice fill:#fff8c5,stroke:#d4a72c,color:#5c3d00,stroke-width:1px
+    classDef debrief fill:#fbefff,stroke:#c297ff,color:#512a97,stroke-width:1px
+    class S,G,T,C,N,X,P,D say
+    class G1,G2,G3,T1,T2,T3,T4,C1,N1,J4 teacher
+    class X1,X2,J,J1,J2,J3 explore
+    class P1 practice
+    class D1 debrief
 ```
 
-`teacher` runs a lesson from a plan the learner approved: Probe, Plan, Teach and Recap. Each plan step is an Attempt (the learner works on the problem before it is taught), an Explain that starts from that attempt, and a Check. `explore` has no plan: it looks in the vault, researches only if needed, teaches one unit and offers jumps. Both file their evidence in the same notes and levels. `practice` runs on its own request and retests what either one taught.
+Each branch starts from what the learner says and is labelled and coloured by the skill that takes it. A goal (a job offer, a certification, or a broad goal spanning several skills) is mapped to skill nodes and a track of ordered lessons, and each of those lessons runs like `teach me X`: Probe, Plan, Teach and Recap. In Teach, each plan step is an Attempt (the learner works on the problem before it is taught), an Explain that starts from that attempt, and a Check. `explore` has no plan: it looks in the vault, researches only if needed, teaches one unit and offers jumps. `teacher`, `explore` and `practice` file their evidence in the same notes and levels.
 
 ## What each piece does
 
